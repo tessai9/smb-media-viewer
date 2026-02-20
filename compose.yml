@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - ./test-media:/mnt/media:ro
+      - shards:/app/lib
+      - thumbnail-cache:/root/.cache/media-viewer
+    environment:
+      - KEMAL_ENV=development
+
+volumes:
+  shards:
+  thumbnail-cache:

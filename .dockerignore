@@ -1,0 +1,7 @@
+.git
+.claude
+.kiro
+*.md
+media-viewer
+lib/
+.shards/

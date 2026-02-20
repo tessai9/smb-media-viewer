@@ -1,0 +1,17 @@
+FROM crystallang/crystal:1.15.1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libvips-tools \
+    ffmpeg \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install shards first (cached layer unless shard.yml changes)
+COPY shard.yml ./
+RUN shards install --without-development
+
+# Source is volume-mounted at runtime
+CMD ["crystal", "run", "src/app.cr"]
