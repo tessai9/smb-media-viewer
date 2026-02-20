@@ -3,13 +3,13 @@
 ## タスク一覧
 
 - [ ] 1. プロジェクト基盤のセットアップ
-- [ ] 1.1 Crystal プロジェクトと依存関係を初期化する
+- [x] 1.1 Crystal プロジェクトと依存関係を初期化する
   - `shard.yml` を作成し、Kemal を唯一の shard 依存として定義する
   - `src/services/`、`src/views/`、`public/` のディレクトリ構造を作成する
   - `shard.lock` を生成し、Docker 環境でのビルドを確認する
   - _Requirements: 7.3_
 
-- [ ] 1.2 フォールバック用静的アセットを用意する
+- [x] 1.2 フォールバック用静的アセットを用意する
   - サムネイル生成失敗時に使用する `no-thumbnail.svg` を `public/` に作成する
   - Kemal が `public/` を静的ディレクトリとして認識する設定を確認する
   - _Requirements: 4.6_
