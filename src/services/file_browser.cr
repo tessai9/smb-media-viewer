@@ -1,6 +1,9 @@
+require "json"
 require "./mime"
 
 struct FileEntry
+  include JSON::Serializable
+
   property name       : String
   property path       : String   # relative path from media_root
   property is_dir     : Bool
