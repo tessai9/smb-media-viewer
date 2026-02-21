@@ -146,6 +146,27 @@ describe ThumbnailService do
       end
     end
 
+    it "creates a new cache file when mtime changes (auto-invalidation integration)" do
+      with_tmpdir do |tmpdir|
+        cache_dir = File.join(tmpdir, "cache")
+        src       = File.join(tmpdir, "img.ppm")
+        write_test_ppm(src)
+
+        mtime1 = File.info(src).modification_time
+        # Simulate a later mtime (1 second ahead — no actual filesystem sleep needed)
+        mtime2 = mtime1 + 1.second
+
+        result1 = ThumbnailService.fetch_or_generate(src, mtime1, MediaType::Image, cache_dir, 50)
+        result2 = ThumbnailService.fetch_or_generate(src, mtime2, MediaType::Image, cache_dir, 50)
+
+        result1.should_not be_nil
+        result2.should_not be_nil
+        # Different mtimes produce different cache paths → new file generated
+        result1.should_not eq(result2)
+        File.exists?(result2.not_nil!).should be_true
+      end
+    end
+
     it "generates a thumbnail for a video file (ffmpeg → vipsthumbnail)" do
       with_tmpdir do |tmpdir|
         cache_dir = File.join(tmpdir, "cache")

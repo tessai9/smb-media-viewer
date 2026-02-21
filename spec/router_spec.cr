@@ -243,6 +243,57 @@ describe "HTTP Routes" do
     end
   end
 
+  # ----- 9.2: path traversal prevention -----
+  # Note: Kemal's StaticFileHandler normalises '..' in URL paths via 302 redirect
+  # before our route handlers run. For paths that DO reach safe_path (no '..'), our
+  # handler returns 400 when safe_path returns nil, or 404 when the resolved path
+  # does not exist. The unit tests in file_browser_spec.cr verify safe_path directly.
+  # These HTTP-level tests confirm the server never exposes file content for traversal.
+
+  describe "Path traversal prevention" do
+    it "does not serve file content for .. traversal in /browse/*path" do
+      request  = HTTP::Request.new("GET", "/browse/../../etc/passwd")
+      response = call_request_on_app(request)
+      # Kemal normalises '..' → 302 redirect; safe_path guards anything reaching the handler
+      [302, 400, 404].includes?(response.status_code).should be_true
+      response.body.should_not contain("root:")  # must not expose /etc/passwd content
+    end
+
+    it "does not serve file content for .. traversal in /api/files/*path" do
+      request  = HTTP::Request.new("GET", "/api/files/../../etc/passwd")
+      response = call_request_on_app(request)
+      [302, 400, 404].includes?(response.status_code).should be_true
+      response.body.should_not contain("root:")
+    end
+
+    it "does not serve file content for .. traversal in /view/*path" do
+      request  = HTTP::Request.new("GET", "/view/../../etc/passwd")
+      response = call_request_on_app(request)
+      [302, 400, 404].includes?(response.status_code).should be_true
+      response.body.should_not contain("root:")
+    end
+
+    it "does not serve file content for .. traversal in /raw/*path" do
+      request  = HTTP::Request.new("GET", "/raw/../../etc/passwd")
+      response = call_request_on_app(request)
+      [302, 400, 404].includes?(response.status_code).should be_true
+      response.body.should_not contain("root:")
+    end
+
+    it "does not serve file content for .. traversal in /thumbnail/*path" do
+      request  = HTTP::Request.new("GET", "/thumbnail/../../etc/passwd")
+      response = call_request_on_app(request)
+      [302, 400, 404].includes?(response.status_code).should be_true
+      response.body.should_not contain("root:")
+    end
+
+    it "safe_path returns nil for .. traversal (unit-level guard)" do
+      # Confirm the guard that protects all HTTP handlers works correctly
+      FileBrowser.safe_path(media_root, "../../etc/passwd").should be_nil
+      FileBrowser.safe_path(media_root, "../etc/passwd").should be_nil
+    end
+  end
+
   # ----- 7.3: thumbnail route -----
 
   describe "GET /thumbnail/*path" do
