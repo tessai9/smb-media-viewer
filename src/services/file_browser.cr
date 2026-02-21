@@ -87,6 +87,7 @@ module FileBrowser
       )
     end
 
+    # Sort by file name
     entries.sort! do |a, b|
       if a.is_dir == b.is_dir
         a.name.downcase <=> b.name.downcase
