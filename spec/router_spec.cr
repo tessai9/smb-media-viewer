@@ -294,6 +294,92 @@ describe "HTTP Routes" do
     end
   end
 
+  # ----- 2.1 + 2.2: sort parameter support on HTTP routes -----
+
+  describe "Sort parameter support" do
+    # Run after the outer before_each to set deterministic mtimes
+    before_each do
+      File.utime(Time.utc(2023, 6, 1), Time.utc(2023, 6, 1), File.join(media_root, "photo.jpg"))
+      File.utime(Time.utc(2025, 6, 1), Time.utc(2025, 6, 1), File.join(media_root, "video.mp4"))
+    end
+
+    describe "GET /browse/ with sort params (Task 2.1)" do
+      it "accepts sort=mtime&order=desc and returns 200 HTML" do
+        request  = HTTP::Request.new("GET", "/browse/?sort=mtime&order=desc")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+        response.body.should contain("<!DOCTYPE html>")
+      end
+
+      it "accepts sort=ctime&order=asc and returns 200 HTML" do
+        request  = HTTP::Request.new("GET", "/browse/?sort=ctime&order=asc")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+      end
+
+      it "silently falls back to default when sort=invalid&order=bad" do
+        request  = HTTP::Request.new("GET", "/browse/?sort=invalid&order=bad")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+      end
+    end
+
+    describe "GET /browse/*path with sort params (Task 2.1)" do
+      it "accepts sort params for a subdirectory and returns 200 HTML" do
+        request  = HTTP::Request.new("GET", "/browse/subdir?sort=name&order=desc")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+      end
+    end
+
+    describe "GET /api/files/ with sort params (Task 2.2)" do
+      it "accepts sort=mtime&order=desc and returns 200 JSON" do
+        request  = HTTP::Request.new("GET", "/api/files/?sort=mtime&order=desc")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+        response.headers["Content-Type"].should contain("application/json")
+      end
+
+      it "silently falls back to default when sort=invalid&order=bad" do
+        request  = HTTP::Request.new("GET", "/api/files/?sort=invalid&order=bad")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+        response.headers["Content-Type"].should contain("application/json")
+      end
+
+      it "returns files sorted by mtime desc (newest first)" do
+        request  = HTTP::Request.new("GET", "/api/files/?sort=mtime&order=desc")
+        response = call_request_on_app(request)
+        json  = JSON.parse(response.body)
+        files = json.as_a.reject { |e| e["is_dir"].as_bool }.map { |e| e["name"].as_s }
+        files.index("video.mp4").not_nil!.should be < files.index("photo.jpg").not_nil!
+      end
+
+      it "returns files sorted by mtime asc (oldest first)" do
+        request  = HTTP::Request.new("GET", "/api/files/?sort=mtime&order=asc")
+        response = call_request_on_app(request)
+        json  = JSON.parse(response.body)
+        files = json.as_a.reject { |e| e["is_dir"].as_bool }.map { |e| e["name"].as_s }
+        files.index("photo.jpg").not_nil!.should be < files.index("video.mp4").not_nil!
+      end
+    end
+
+    describe "GET /api/files/*path with sort params (Task 2.2)" do
+      it "accepts sort params for a subdirectory and returns 200 JSON" do
+        request  = HTTP::Request.new("GET", "/api/files/subdir?sort=mtime&order=desc")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+        response.headers["Content-Type"].should contain("application/json")
+      end
+
+      it "silently falls back for invalid sort params in a subdirectory" do
+        request  = HTTP::Request.new("GET", "/api/files/subdir?sort=bad&order=bad")
+        response = call_request_on_app(request)
+        response.status_code.should eq(200)
+      end
+    end
+  end
+
   # ----- 7.3: thumbnail route -----
 
   describe "GET /thumbnail/*path" do

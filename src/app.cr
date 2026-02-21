@@ -17,7 +17,9 @@ module AppRouter
 
     # GET /browse/ → root directory listing (SSR HTML)
     get "/browse/" do |env|
-      entries      = FileBrowser.list_entries(config.media_root, "", 0, config.items_per_page) || [] of FileEntry
+      sort_key     = FileBrowser.parse_sort_key(env.params.query["sort"]? || "")
+      sort_dir     = FileBrowser.parse_sort_dir(env.params.query["order"]? || "")
+      entries      = FileBrowser.list_entries(config.media_root, "", 0, config.items_per_page, sort_key, sort_dir) || [] of FileEntry
       current_path = ""
       title        = "Media Viewer"
       content      = ECR.render("src/views/directory.ecr")
@@ -31,7 +33,9 @@ module AppRouter
       halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
       halt env, status_code: 404, response: "Not Found" unless Dir.exists?(abs_path)
 
-      entries      = FileBrowser.list_entries(config.media_root, rel_path, 0, config.items_per_page) || [] of FileEntry
+      sort_key     = FileBrowser.parse_sort_key(env.params.query["sort"]? || "")
+      sort_dir     = FileBrowser.parse_sort_dir(env.params.query["order"]? || "")
+      entries      = FileBrowser.list_entries(config.media_root, rel_path, 0, config.items_per_page, sort_key, sort_dir) || [] of FileEntry
       current_path = rel_path
       title        = rel_path
       content      = ECR.render("src/views/directory.ecr")
@@ -40,9 +44,11 @@ module AppRouter
 
     # GET /api/files/ → root directory as JSON (infinite scroll)
     get "/api/files/" do |env|
-      offset  = env.params.query["offset"]?.try(&.to_i?) || 0
-      limit   = env.params.query["limit"]?.try(&.to_i?) || 50
-      entries = FileBrowser.list_entries(config.media_root, "", offset, limit) || [] of FileEntry
+      offset   = env.params.query["offset"]?.try(&.to_i?) || 0
+      limit    = env.params.query["limit"]?.try(&.to_i?) || 50
+      sort_key = FileBrowser.parse_sort_key(env.params.query["sort"]? || "")
+      sort_dir = FileBrowser.parse_sort_dir(env.params.query["order"]? || "")
+      entries  = FileBrowser.list_entries(config.media_root, "", offset, limit, sort_key, sort_dir) || [] of FileEntry
       env.response.content_type = "application/json"
       entries.to_json
     end
@@ -54,9 +60,11 @@ module AppRouter
       halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
       halt env, status_code: 404, response: "Not Found" unless Dir.exists?(abs_path)
 
-      offset  = env.params.query["offset"]?.try(&.to_i?) || 0
-      limit   = env.params.query["limit"]?.try(&.to_i?) || 50
-      entries = FileBrowser.list_entries(config.media_root, rel_path, offset, limit) || [] of FileEntry
+      offset   = env.params.query["offset"]?.try(&.to_i?) || 0
+      limit    = env.params.query["limit"]?.try(&.to_i?) || 50
+      sort_key = FileBrowser.parse_sort_key(env.params.query["sort"]? || "")
+      sort_dir = FileBrowser.parse_sort_dir(env.params.query["order"]? || "")
+      entries  = FileBrowser.list_entries(config.media_root, rel_path, offset, limit, sort_key, sort_dir) || [] of FileEntry
       env.response.content_type = "application/json"
       entries.to_json
     end
