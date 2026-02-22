@@ -31,6 +31,15 @@ describe "layout.ecr" do
 end
 
 describe "directory.ecr" do
+  # sort_key and sort_dir are now required by directory.ecr; use defaults for these tests
+  sort_key = uninitialized SortKey
+  sort_dir = uninitialized SortDir
+
+  before_each do
+    sort_key = SortKey::Name
+    sort_dir = SortDir::Asc
+  end
+
   it "renders img with src='' and data-src for lazy loading" do
     entries      = [FileEntry.new("photo.jpg", "sub/photo.jpg", false, 1024i64, Time.utc, "image")] of FileEntry
     current_path = "sub"

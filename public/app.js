@@ -22,7 +22,9 @@
   function loadMore() {
     if (busy || exhausted) return;
     busy = true;
-    var url = '/api/files/' + path + '?offset=' + offset + '&limit=50';
+    var sort = grid.dataset.sort || 'name';
+    var order = grid.dataset.order || 'asc';
+    var url = '/api/files/' + path + '?offset=' + offset + '&limit=50&sort=' + sort + '&order=' + order;
     fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (items) {

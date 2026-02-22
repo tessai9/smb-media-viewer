@@ -1,4 +1,16 @@
-<div class="grid" data-path="<%= current_path %>" data-offset="<%= entries.size %>">
+<form class="sort-bar" method="get">
+  <select name="sort">
+    <option value="name"<%= sort_key == SortKey::Name ? " selected" : "" %>>名前</option>
+    <option value="ctime"<%= sort_key == SortKey::Ctime ? " selected" : "" %>>作成日時</option>
+    <option value="mtime"<%= sort_key == SortKey::Mtime ? " selected" : "" %>>更新日時</option>
+  </select>
+  <select name="order">
+    <option value="asc"<%= sort_dir == SortDir::Asc ? " selected" : "" %>>昇順</option>
+    <option value="desc"<%= sort_dir == SortDir::Desc ? " selected" : "" %>>降順</option>
+  </select>
+  <button type="submit">並替</button>
+</form>
+<div class="grid" data-path="<%= current_path %>" data-offset="<%= entries.size %>" data-sort="<%= sort_key.to_s.downcase %>" data-order="<%= sort_dir.to_s.downcase %>">
   <% entries.each do |entry| %>
     <% if entry.is_dir %>
       <a class="card card--dir" href="/browse/<%= entry.path %>">

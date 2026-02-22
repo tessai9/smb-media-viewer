@@ -364,6 +364,46 @@ describe "HTTP Routes" do
       end
     end
 
+    describe "directory.ecr sort controls (Task 3.1)" do
+      it "renders a sort-bar form with sort and order select elements" do
+        request  = HTTP::Request.new("GET", "/browse/")
+        response = call_request_on_app(request)
+        response.body.should contain("sort-bar")
+        response.body.should contain("name=\"sort\"")
+        response.body.should contain("name=\"order\"")
+        response.body.should contain("type=\"submit\"")
+      end
+
+      it "embeds data-sort and data-order on the grid element" do
+        request  = HTTP::Request.new("GET", "/browse/?sort=mtime&order=desc")
+        response = call_request_on_app(request)
+        response.body.should contain("data-sort=\"mtime\"")
+        response.body.should contain("data-order=\"desc\"")
+      end
+
+      it "marks the active sort key option as selected (default: name)" do
+        request  = HTTP::Request.new("GET", "/browse/")
+        response = call_request_on_app(request)
+        response.body.should contain("value=\"name\"")
+        response.body.should contain("value=\"asc\"")
+        response.body.should contain("selected")
+      end
+
+      it "marks mtime and desc as selected when ?sort=mtime&order=desc" do
+        request  = HTTP::Request.new("GET", "/browse/?sort=mtime&order=desc")
+        response = call_request_on_app(request)
+        response.body.should match(/value="mtime"[^>]*selected|selected[^>]*value="mtime"/)
+        response.body.should match(/value="desc"[^>]*selected|selected[^>]*value="desc"/)
+      end
+
+      it "embeds default data-sort=name and data-order=asc when no params given" do
+        request  = HTTP::Request.new("GET", "/browse/")
+        response = call_request_on_app(request)
+        response.body.should contain("data-sort=\"name\"")
+        response.body.should contain("data-order=\"asc\"")
+      end
+    end
+
     describe "GET /api/files/*path with sort params (Task 2.2)" do
       it "accepts sort params for a subdirectory and returns 200 JSON" do
         request  = HTTP::Request.new("GET", "/api/files/subdir?sort=mtime&order=desc")
