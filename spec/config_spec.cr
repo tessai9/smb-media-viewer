@@ -8,9 +8,10 @@ describe AppConfig do
       config.media_root.should eq("/mnt/nas/media")
     end
 
-    it "uses ~/.cache/media-viewer as default cache_dir" do
+    it "uses ~/.cache/media-viewer (expanded) as default cache_dir" do
       config = AppConfig.load("/nonexistent/path_that_does_not_exist.yml")
-      config.cache_dir.should eq("~/.cache/media-viewer")
+      # ~ is expanded at load time, so compare against the expanded form
+      config.cache_dir.should eq(Path["~/.cache/media-viewer"].expand(home: true).to_s)
     end
 
     it "uses 3000 as default port" do

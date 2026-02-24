@@ -10,15 +10,23 @@ struct AppConfig
   property items_per_page : Int32  = 50
 
   # Load config from a YAML file. Returns defaults if the file does not exist.
+  # Relative paths and ~ in media_root / cache_dir are expanded to absolute paths
+  # so that external commands (vipsthumbnail, ffmpeg, etc.) receive absolute paths
+  # regardless of the working directory when the process was started.
   def self.load(path : String = "config.yml") : AppConfig
-    if File.exists?(path)
-      AppConfig.from_yaml(File.read(path))
-    else
+    config = begin
+      if File.exists?(path)
+        AppConfig.from_yaml(File.read(path))
+      else
+        AppConfig.from_yaml("{}")
+      end
+    rescue ex : Exception
+      STDERR.puts "Config load error (#{path}): #{ex.message}"
       AppConfig.from_yaml("{}")
     end
-  rescue ex : Exception
-    STDERR.puts "Config load error (#{path}): #{ex.message}"
-    AppConfig.from_yaml("{}")
+    config.media_root = Path[config.media_root].expand(home: true).to_s
+    config.cache_dir  = Path[config.cache_dir].expand(home: true).to_s
+    config
   end
 end
 
