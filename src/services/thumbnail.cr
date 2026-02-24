@@ -45,15 +45,20 @@ module ThumbnailService
   # Runs an external command without shell expansion.
   # Returns false (never raises) if the command is not found or exits non-zero.
   private def self.run_command(cmd : String, args : Array(String)) : Bool
+    err_io = IO::Memory.new
     status = Process.run(
       cmd,
       args: args,
       output: Process::Redirect::Close,
-      error: Process::Redirect::Close
+      error: err_io
     )
+    unless status.success?
+      err = err_io.to_s.strip
+      STDERR.puts "ThumbnailService: #{cmd} exited #{status.exit_code}#{err.empty? ? "" : " — #{err}"}"
+    end
     status.success?
   rescue ex
-    STDERR.puts "Command failed (#{cmd}): #{ex.message}"
+    STDERR.puts "ThumbnailService: #{cmd} not found or failed: #{ex.message}"
     false
   end
 

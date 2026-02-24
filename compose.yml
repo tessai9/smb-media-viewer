@@ -7,7 +7,7 @@ services:
       - "3000:3000"
     volumes:
       - .:/app
-      - ./test-media:/mnt/media:ro
+      - ./test-media:/app/mnt:ro
       - shards:/app/lib
       - thumbnail-cache:/root/.cache/media-viewer
     environment:

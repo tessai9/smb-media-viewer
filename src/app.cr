@@ -5,6 +5,7 @@ require "./services/file_browser"
 require "./services/thumbnail"
 require "json"
 require "ecr"
+require "uri"
 
 module AppRouter
   def self.setup(config : AppConfig = CONFIG)
@@ -28,7 +29,7 @@ module AppRouter
 
     # GET /browse/*path → subdirectory listing (SSR HTML)
     get "/browse/*path" do |env|
-      rel_path = env.params.url["path"]
+      rel_path = URI.decode(env.params.url["path"])
       abs_path = FileBrowser.safe_path(config.media_root, rel_path)
       halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
       halt env, status_code: 404, response: "Not Found" unless Dir.exists?(abs_path)
@@ -55,7 +56,7 @@ module AppRouter
 
     # GET /api/files/*path → subdirectory as JSON (infinite scroll)
     get "/api/files/*path" do |env|
-      rel_path = env.params.url["path"]
+      rel_path = URI.decode(env.params.url["path"])
       abs_path = FileBrowser.safe_path(config.media_root, rel_path)
       halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
       halt env, status_code: 404, response: "Not Found" unless Dir.exists?(abs_path)
@@ -71,7 +72,7 @@ module AppRouter
 
     # GET /view/*path → viewer page (SSR HTML) with prev/next navigation
     get "/view/*path" do |env|
-      rel_path = env.params.url["path"]
+      rel_path = URI.decode(env.params.url["path"])
       abs_path = FileBrowser.safe_path(config.media_root, rel_path)
       halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
       halt env, status_code: 404, response: "Not Found" unless File.exists?(abs_path)
@@ -95,7 +96,7 @@ module AppRouter
 
     # GET /raw/*path → serve file with correct Content-Type; supports Range requests
     get "/raw/*path" do |env|
-      rel_path = env.params.url["path"]
+      rel_path = URI.decode(env.params.url["path"])
       abs_path = FileBrowser.safe_path(config.media_root, rel_path)
       halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
       halt env, status_code: 404, response: "Not Found" unless File.exists?(abs_path)
@@ -106,7 +107,7 @@ module AppRouter
 
     # GET /thumbnail/*path → JPEG thumbnail; 302 to /no-thumbnail.svg on failure
     get "/thumbnail/*path" do |env|
-      rel_path = env.params.url["path"]
+      rel_path = URI.decode(env.params.url["path"])
       abs_path = FileBrowser.safe_path(config.media_root, rel_path)
       halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
       halt env, status_code: 404, response: "Not Found" unless File.exists?(abs_path)

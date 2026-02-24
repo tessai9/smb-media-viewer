@@ -8,13 +8,17 @@
   var offset = parseInt(grid.dataset.offset) || 0;
   var busy = false, exhausted = false;
 
+  function encodePath(path) {
+    return path.split('/').map(encodeURIComponent).join('/');
+  }
+
   function buildCard(e) {
     var a = document.createElement('a');
     a.className = e.is_dir ? 'card card--dir' : 'card';
-    a.href = e.is_dir ? '/browse/' + e.path : '/view/' + e.path;
+    a.href = e.is_dir ? '/browse/' + encodePath(e.path) : '/view/' + encodePath(e.path);
     var inner = e.is_dir
       ? '<div class="thumb thumb--dir"></div>'
-      : '<img src="" data-src="/thumbnail/' + e.path + '" alt="">';
+      : '<img src="" data-src="/thumbnail/' + encodePath(e.path) + '" alt="">';
     a.innerHTML = inner + '<span class="name">' + e.name + '</span>';
     return a;
   }

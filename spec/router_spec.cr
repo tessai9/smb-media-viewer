@@ -446,4 +446,56 @@ describe "HTTP Routes" do
       end
     end
   end
+
+  # ----- Multibyte (non-ASCII) path handling -----
+  # Verifies that percent-encoded Japanese paths (as sent by browsers) are
+  # correctly decoded by URI.decode before filesystem lookup.
+  #
+  # Encoding reference:
+  #   日本語フォルダ → %E6%97%A5%E6%9C%AC%E8%AA%9E%E3%83%95%E3%82%A9%E3%83%AB%E3%83%80
+  #   画像.jpg       → %E7%94%BB%E5%83%8F.jpg
+
+  describe "Multibyte path handling" do
+    mb_dir  = "%E6%97%A5%E6%9C%AC%E8%AA%9E%E3%83%95%E3%82%A9%E3%83%AB%E3%83%80"
+    mb_file = "%E7%94%BB%E5%83%8F.jpg"
+
+    before_each do
+      jp_dir = File.join(media_root, "日本語フォルダ")
+      FileUtils.mkdir_p(jp_dir)
+      File.open(File.join(jp_dir, "画像.jpg"), "wb") { |f| f.write(JPEG_BYTES) }
+    end
+
+    it "returns 200 for /browse/ with percent-encoded Japanese directory" do
+      request  = HTTP::Request.new("GET", "/browse/#{mb_dir}")
+      response = call_request_on_app(request)
+      response.status_code.should eq(200)
+      response.body.should contain("画像.jpg")
+    end
+
+    it "returns 200 for /view/ with percent-encoded Japanese file path" do
+      request  = HTTP::Request.new("GET", "/view/#{mb_dir}/#{mb_file}")
+      response = call_request_on_app(request)
+      response.status_code.should eq(200)
+    end
+
+    it "returns 200 or 302 for /thumbnail/ with percent-encoded Japanese file path" do
+      request  = HTTP::Request.new("GET", "/thumbnail/#{mb_dir}/#{mb_file}")
+      response = call_request_on_app(request)
+      [200, 302].includes?(response.status_code).should be_true
+    end
+
+    it "returns 200 with correct Content-Type for /raw/ with percent-encoded Japanese file" do
+      request  = HTTP::Request.new("GET", "/raw/#{mb_dir}/#{mb_file}")
+      response = call_request_on_app(request)
+      response.status_code.should eq(200)
+      response.headers["Content-Type"].should contain("image/jpeg")
+    end
+
+    it "encodes Japanese directory names in browse listing href attributes" do
+      request  = HTTP::Request.new("GET", "/browse/")
+      response = call_request_on_app(request)
+      # ECR now outputs URI.encode_path(entry.path) so Japanese chars are percent-encoded
+      response.body.should contain("%E6%97%A5%E6%9C%AC%E8%AA%9E")
+    end
+  end
 end

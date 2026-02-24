@@ -13,13 +13,13 @@
 <div class="grid" data-path="<%= current_path %>" data-offset="<%= entries.size %>" data-sort="<%= sort_key.to_s.downcase %>" data-order="<%= sort_dir.to_s.downcase %>">
   <% entries.each do |entry| %>
     <% if entry.is_dir %>
-      <a class="card card--dir" href="/browse/<%= entry.path %>">
+      <a class="card card--dir" href="/browse/<%= URI.encode_path(entry.path) %>">
         <div class="thumb thumb--dir"></div>
         <span class="name"><%= entry.name %></span>
       </a>
     <% else %>
-      <a class="card" href="/view/<%= entry.path %>">
-        <img src="" data-src="/thumbnail/<%= entry.path %>" alt="">
+      <a class="card" href="/view/<%= URI.encode_path(entry.path) %>">
+        <img src="" data-src="/thumbnail/<%= URI.encode_path(entry.path) %>" alt="">
         <span class="name"><%= entry.name %></span>
       </a>
     <% end %>

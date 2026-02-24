@@ -2,13 +2,13 @@
    browse_path  = parent_dir == "." ? "" : parent_dir %>
 <div class="viewer">
   <nav class="viewer-nav">
-    <a href="/browse/<%= browse_path %>" class="nav-back">← 一覧に戻る</a>
+    <a href="/browse/<%= URI.encode_path(browse_path) %>" class="nav-back">← 一覧に戻る</a>
     <div class="nav-arrows">
       <% if pe = prev_entry %>
-        <a href="/view/<%= pe.path %>" class="nav-prev">← 前へ</a>
+        <a href="/view/<%= URI.encode_path(pe.path) %>" class="nav-prev">← 前へ</a>
       <% end %>
       <% if ne = next_entry %>
-        <a href="/view/<%= ne.path %>" class="nav-next">次へ →</a>
+        <a href="/view/<%= URI.encode_path(ne.path) %>" class="nav-next">次へ →</a>
       <% end %>
     </div>
   </nav>
@@ -16,14 +16,14 @@
   <div class="viewer-media">
     <% case entry.media_type
     when "image" %>
-      <img src="/raw/<%= entry.path %>" alt="<%= entry.name %>">
+      <img src="/raw/<%= URI.encode_path(entry.path) %>" alt="<%= entry.name %>">
     <% when "video" %>
       <video controls>
-        <source src="/raw/<%= entry.path %>" type="<%= MimeService.content_type(entry.name) %>">
+        <source src="/raw/<%= URI.encode_path(entry.path) %>" type="<%= MimeService.content_type(entry.name) %>">
       </video>
     <% when "pdf" %>
-      <object data="/raw/<%= entry.path %>" type="application/pdf" width="100%" height="800">
-        <a href="/raw/<%= entry.path %>" download="<%= entry.name %>">ダウンロード</a>
+      <object data="/raw/<%= URI.encode_path(entry.path) %>" type="application/pdf" width="100%" height="800">
+        <a href="/raw/<%= URI.encode_path(entry.path) %>" download="<%= entry.name %>">ダウンロード</a>
       </object>
     <% end %>
   </div>
