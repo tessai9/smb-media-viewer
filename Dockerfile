@@ -25,6 +25,7 @@ RUN apt-get update \
     libpcre2-8-0 \
     libssl3 \
     zlib1g \
+    libyaml-0-2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
