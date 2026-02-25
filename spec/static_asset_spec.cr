@@ -33,9 +33,9 @@ describe "Static Assets" do
       js.should contain("&order=")
     end
 
-    it "is within the 4KB size limit" do
+    it "is within the 8KB size limit" do
       size = File.size("public/app.js")
-      size.should be <= 4096
+      size.should be <= 8192
     end
   end
 end

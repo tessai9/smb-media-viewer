@@ -83,6 +83,36 @@
     + '<button id="overlay-next">\u203a</button>';
   document.body.appendChild(overlay);
 
+  var b = document.body;
+  var oImg = document.getElementById('overlay-img');
+  var oName = document.getElementById('overlay-name');
+  var oClose = document.getElementById('overlay-close');
+  var oOpen = false, oCur = null, oSY = 0;
+
+  function openOverlay(c) {
+    oSY = window.scrollY; oCur = c; oOpen = true;
+    oImg.src = '';
+    oImg.src = c.href.replace('/view/', '/raw/');
+    oName.textContent = c.lastElementChild.textContent;
+    b.classList.add('overlay-open');
+    overlay.hidden = false;
+    history.pushState(0, 0, c.href);
+    updateNavButtons();
+  }
+
+  function closeOverlay(fp) {
+    oOpen = false; overlay.hidden = true; oImg.src = '';
+    b.classList.remove('overlay-open');
+    window.scrollTo(0, oSY);
+    if (!fp) history.back();
+  }
+
+  function updateNavButtons() {}
+
+  oClose.addEventListener('click', function() { closeOverlay(0); });
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeOverlay(0); });
+  window.addEventListener('popstate', function() { if (oOpen) closeOverlay(1); });
+
   grid.addEventListener('click', function(e) {
     var card = e.target.closest('.card');
     if (!card || card.classList.contains('card--dir')) return;

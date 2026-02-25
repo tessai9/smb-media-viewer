@@ -29,8 +29,8 @@
   - Confirm that the existing `/view/*` SSR page is still reachable by direct URL (no server-side changes required)
   - _Requirements: 1.1, 1.3, 5.4, 6.1, 6.2_
 
-- [ ] 4. Implement overlay open and close lifecycle
-- [ ] 4.1 Implement `openOverlay(card)`
+- [x] 4. Implement overlay open and close lifecycle
+- [x] 4.1 Implement `openOverlay(card)`
   - Record `window.scrollY` into `savedScrollY` before any DOM changes
   - Add the `overlay-open` class to `document.body` to lock background scroll
   - Clear `img#overlay-img`'s `src`, then set it to the card's raw image URL (derived by replacing the `/view/` prefix in `card.href` with `/raw/`)
@@ -41,7 +41,7 @@
   - Call `updateNavButtons()` to set initial button states
   - _Requirements: 1.2, 1.4, 3.1, 3.3, 5.1, 8.3_
 
-- [ ] 4.2 Implement `closeOverlay()` and the `popstate` handler
+- [x] 4.2 Implement `closeOverlay()` and the `popstate` handler
   - In `closeOverlay()`: set `overlayOpen` to false, add `hidden` back to `#overlay`, clear `img#overlay-img.src` to release memory, remove `overlay-open` from `document.body`, and call `window.scrollTo(0, savedScrollY)` to restore position
   - When `closeOverlay()` is triggered by a button or keyboard action (not by `popstate`), call `history.back()` to pop the pushed history entry
   - Add a `popstate` listener on `window`; when the overlay is open and `popstate` fires, call `closeOverlay()` without calling `history.back()` a second time

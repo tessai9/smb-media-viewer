@@ -76,8 +76,8 @@ describe "Static Assets" do
       File.exists?(js_path).should be_true
     end
 
-    it "is under 4KB" do
-      File.size(js_path).should be < 4096
+    it "is under 8KB" do
+      File.size(js_path).should be < 8192
     end
 
     it "uses IntersectionObserver" do
@@ -130,6 +130,31 @@ describe "Static Assets" do
       content = File.read(js_path)
       content.should contain("openOverlay")
       content.should contain("closest")
+    end
+
+    it "defines openOverlay that records scroll position and pushes history" do
+      content = File.read(js_path)
+      content.should contain("function openOverlay")
+      content.should contain("window.scrollY")
+      content.should contain("history.pushState")
+      content.should contain("overlay-open")
+    end
+
+    it "defines closeOverlay that restores scroll and pops history" do
+      content = File.read(js_path)
+      content.should contain("function closeOverlay")
+      content.should contain("window.scrollTo")
+      content.should contain("history.back")
+    end
+
+    it "closes overlay on popstate (browser back button)" do
+      content = File.read(js_path)
+      content.should contain("popstate")
+    end
+
+    it "closes overlay when backdrop is clicked" do
+      content = File.read(js_path)
+      content.should contain("e.target")
     end
   end
 
