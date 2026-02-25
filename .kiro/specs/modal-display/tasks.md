@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. (P) Add `data-media-type` to SSR-rendered directory cards
+- [x] 1. (P) Add `data-media-type` to SSR-rendered directory cards
   - In `directory.ecr`, add `data-media-type="<%= entry.media_type %>"` attribute to every non-directory `<a class="card">` element
   - Directory cards (`card--dir`) must not receive this attribute
   - Verify the attribute renders correctly for image, video, pdf, and unknown entries using the existing test-media fixtures

@@ -1,5 +1,6 @@
 require "spec"
 require "ecr"
+require "uri"
 require "../src/services/file_browser"
 require "../src/services/mime"
 
@@ -92,6 +93,34 @@ describe "directory.ecr" do
     current_path = ""
     result = ECR.render("src/views/directory.ecr")
     result.should_not contain("data-src=\"/thumbnail/subdir\"")
+  end
+
+  it "sets data-media-type on image file cards" do
+    entries      = [FileEntry.new("photo.jpg", "photo.jpg", false, 1024i64, Time.utc, "image")] of FileEntry
+    current_path = ""
+    result = ECR.render("src/views/directory.ecr")
+    result.should contain("data-media-type=\"image\"")
+  end
+
+  it "sets data-media-type on video file cards" do
+    entries      = [FileEntry.new("clip.mp4", "clip.mp4", false, 2048i64, Time.utc, "video")] of FileEntry
+    current_path = ""
+    result = ECR.render("src/views/directory.ecr")
+    result.should contain("data-media-type=\"video\"")
+  end
+
+  it "sets data-media-type on pdf file cards" do
+    entries      = [FileEntry.new("doc.pdf", "doc.pdf", false, 512i64, Time.utc, "pdf")] of FileEntry
+    current_path = ""
+    result = ECR.render("src/views/directory.ecr")
+    result.should contain("data-media-type=\"pdf\"")
+  end
+
+  it "does not set data-media-type on directory cards" do
+    entries      = [FileEntry.new("subdir", "subdir", true, 0i64, Time.utc, "unknown")] of FileEntry
+    current_path = ""
+    result = ECR.render("src/views/directory.ecr")
+    result.should_not contain("data-media-type")
   end
 end
 
