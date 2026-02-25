@@ -16,6 +16,7 @@
     var a = document.createElement('a');
     a.className = e.is_dir ? 'card card--dir' : 'card';
     a.href = e.is_dir ? '/browse/' + encodePath(e.path) : '/view/' + encodePath(e.path);
+    if (!e.is_dir) a.dataset.mediaType = e.media_type;
     var inner = e.is_dir
       ? '<div class="thumb thumb--dir"></div>'
       : '<img src="" data-src="/thumbnail/' + encodePath(e.path) + '" alt="">';
@@ -72,4 +73,21 @@
       img.src = img.dataset.src || '';
     });
   }
+
+  var overlay = document.createElement('div');
+  overlay.id = 'overlay';
+  overlay.hidden = true;
+  overlay.innerHTML = '<img id="overlay-img" src="" alt=""><p id="overlay-name"></p>'
+    + '<button id="overlay-close">\u00d7</button>'
+    + '<button id="overlay-prev">\u2039</button>'
+    + '<button id="overlay-next">\u203a</button>';
+  document.body.appendChild(overlay);
+
+  grid.addEventListener('click', function(e) {
+    var card = e.target.closest('.card');
+    if (!card || card.classList.contains('card--dir')) return;
+    var mt = card.dataset.mediaType;
+    if (mt === 'image') { e.preventDefault(); openOverlay(card); }
+    else if (mt === 'video') { e.preventDefault(); window.open(card.href, '_blank'); }
+  });
 }());

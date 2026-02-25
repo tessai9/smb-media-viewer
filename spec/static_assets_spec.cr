@@ -104,6 +104,33 @@ describe "Static Assets" do
       content = File.read(js_path)
       content.should contain("/api/files/")
     end
+
+    it "injects overlay DOM with required element IDs" do
+      content = File.read(js_path)
+      content.should contain("overlay-img")
+      content.should contain("overlay-name")
+      content.should contain("overlay-close")
+      content.should contain("overlay-prev")
+      content.should contain("overlay-next")
+    end
+
+    it "sets dataset.mediaType on non-directory cards in buildCard" do
+      content = File.read(js_path)
+      content.should contain("dataset.mediaType")
+      content.should contain("media_type")
+    end
+
+    it "opens video cards in a new tab" do
+      content = File.read(js_path)
+      content.should contain("window.open")
+      content.should contain("_blank")
+    end
+
+    it "intercepts image card clicks to open the overlay" do
+      content = File.read(js_path)
+      content.should contain("openOverlay")
+      content.should contain("closest")
+    end
   end
 
   describe "public/no-thumbnail.svg" do

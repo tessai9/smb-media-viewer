@@ -15,13 +15,13 @@
   - Add a `body.overlay-open` class rule that sets `overflow: hidden` to prevent background scroll
   - _Requirements: 1.2, 1.4, 1.5, 1.7_
 
-- [ ] 3. Initialize overlay DOM and intercept card clicks
-- [ ] 3.1 Inject overlay HTML and extend `buildCard` for media-type
+- [x] 3. Initialize overlay DOM and intercept card clicks
+- [x] 3.1 Inject overlay HTML and extend `buildCard` for media-type
   - At the end of the `app.js` IIFE, create the overlay element (`div#overlay`) containing: a backdrop div, an `img#overlay-img`, a `p#overlay-name`, a `button#overlay-close`, a `button#overlay-prev`, and a `button#overlay-next`; append it to `document.body`
   - In `buildCard(e)`, after setting `a.className`, also set `a.dataset.mediaType = e.media_type` for non-directory entries
   - _Requirements: 1.1, 1.2, 1.4, 1.5_
 
-- [ ] 3.2 Attach click handler to the directory grid
+- [x] 3.2 Attach click handler to the directory grid
   - Add a single delegated `click` event listener on the `grid` element that reads `data-media-type` from the clicked card
   - For `image` cards: call `preventDefault()` and proceed to open the overlay
   - For `video` cards: call `preventDefault()` and open the card's `href` in a new tab via `window.open(href, '_blank')`
