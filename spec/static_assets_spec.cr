@@ -156,6 +156,30 @@ describe "Static Assets" do
       content = File.read(js_path)
       content.should contain("e.target")
     end
+
+    it "defines getImageCards using live DOM query for image cards" do
+      content = File.read(js_path)
+      content.should contain("getImageCards")
+      content.should contain("data-media-type=\"image\"")
+    end
+
+    it "defines showFile that updates overlay content and calls replaceState" do
+      content = File.read(js_path)
+      content.should contain("function showFile")
+      content.should contain("replaceState")
+    end
+
+    it "updateNavButtons sets disabled state on prev and next buttons" do
+      content = File.read(js_path)
+      content.should contain(".disabled")
+    end
+
+    it "wires prev and next button click handlers for in-overlay navigation" do
+      content = File.read(js_path)
+      content.should contain("oPrev")
+      content.should contain("oNext")
+      (content.includes?("oPrev.addEventListener") || content.includes?("overlay-prev")).should be_true
+    end
   end
 
   describe "public/no-thumbnail.svg" do

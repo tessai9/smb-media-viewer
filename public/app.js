@@ -24,7 +24,7 @@
     return a;
   }
 
-  function loadMore() {
+  function loadMore(cb) {
     if (busy || exhausted) return;
     busy = true;
     var sort = grid.dataset.sort || 'name';
@@ -33,7 +33,7 @@
     fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (items) {
-        if (!items.length) { exhausted = true; busy = false; return; }
+        if (!items.length) { exhausted = true; busy = false; if (cb) cb(); return; }
         var sentinel = document.getElementById('sentinel');
         items.forEach(function (e) {
           var card = buildCard(e);
@@ -43,6 +43,7 @@
         offset += items.length;
         grid.dataset.offset = offset;
         busy = false;
+        if (cb) cb();
       })
       .catch(function () { busy = false; });
   }
@@ -87,7 +88,21 @@
   var oImg = document.getElementById('overlay-img');
   var oName = document.getElementById('overlay-name');
   var oClose = document.getElementById('overlay-close');
+  var oPrev = document.getElementById('overlay-prev');
+  var oNext = document.getElementById('overlay-next');
   var oOpen = false, oCur = null, oSY = 0;
+
+  function getImageCards() {
+    return Array.from(grid.querySelectorAll('.card[data-media-type="image"]'));
+  }
+
+  function showFile(c) {
+    oCur = c; oImg.src = '';
+    oImg.src = c.href.replace('/view/', '/raw/');
+    oName.textContent = c.lastElementChild.textContent;
+    history.replaceState(0, 0, c.href);
+    updateNavButtons();
+  }
 
   function openOverlay(c) {
     oSY = window.scrollY; oCur = c; oOpen = true;
@@ -107,7 +122,32 @@
     if (!fp) history.back();
   }
 
-  function updateNavButtons() {}
+  function updateNavButtons() {
+    var cards = getImageCards();
+    var idx = cards.indexOf(oCur);
+    oPrev.disabled = idx <= 0;
+    oNext.disabled = idx === cards.length - 1 && exhausted;
+  }
+
+  oPrev.addEventListener('click', function() {
+    var cards = getImageCards();
+    var idx = cards.indexOf(oCur);
+    if (idx > 0) showFile(cards[idx - 1]);
+  });
+
+  oNext.addEventListener('click', function() {
+    var cards = getImageCards();
+    var idx = cards.indexOf(oCur);
+    if (idx < cards.length - 1) {
+      showFile(cards[idx + 1]);
+    } else if (!exhausted) {
+      oNext.disabled = true;
+      loadMore(function() {
+        var nc = getImageCards();
+        if (nc.length > idx + 1) showFile(nc[idx + 1]);
+      });
+    }
+  });
 
   oClose.addEventListener('click', function() { closeOverlay(0); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeOverlay(0); });

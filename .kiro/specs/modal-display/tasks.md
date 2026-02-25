@@ -49,13 +49,13 @@
   - Wire clicks on the `#overlay` backdrop (outside the content area) to call `closeOverlay()`
   - _Requirements: 1.6, 1.7, 3.2, 5.3, 8.1_
 
-- [ ] 5. Implement sort-aware in-overlay image navigation
-- [ ] 5.1 Implement `getImageCards()` and `showFile(card)`
+- [x] 5. Implement sort-aware in-overlay image navigation
+- [x] 5.1 Implement `getImageCards()` and `showFile(card)`
   - `getImageCards()` queries `grid.querySelectorAll('.card[data-media-type="image"]')` live each time it is called, ensuring cards added by `loadMore()` are included automatically
   - `showFile(card)` clears `img#overlay-img.src`, updates `currentCard`, sets the new `src` to the raw image URL, updates the filename label, and calls `history.replaceState` with the new file's `/view/[path]` URL
   - _Requirements: 2.1, 2.4, 5.2, 8.2, 8.3_
 
-- [ ] 5.2 Implement `updateNavButtons()` and batch extension on last card
+- [x] 5.2 Implement `updateNavButtons()` and batch extension on last card
   - `updateNavButtons()` computes `currentIdx` as the position of `currentCard` in the live `getImageCards()` result, then sets `#overlay-prev` disabled when `currentIdx === 0`, and `#overlay-next` disabled when `currentIdx` is the last index and `exhausted` is true
   - Wire `#overlay-prev` click to call `showFile(imageCards[currentIdx - 1])` when not disabled
   - Wire `#overlay-next` click: when `currentIdx < imageCards.length - 1`, call `showFile(imageCards[currentIdx + 1])`; when at the last loaded card and `!exhausted`, disable the button, call `loadMore()`, and after the fetch completes re-query image cards and navigate to the newly added next card
