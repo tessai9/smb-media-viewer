@@ -153,6 +153,13 @@
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeOverlay(0); });
   window.addEventListener('popstate', function() { if (oOpen) closeOverlay(1); });
 
+  document.addEventListener('keydown', function(e) {
+    if (!oOpen) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); oNext.click(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); oPrev.click(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeOverlay(0); }
+  });
+
   grid.addEventListener('click', function(e) {
     var card = e.target.closest('.card');
     if (!card || card.classList.contains('card--dir')) return;

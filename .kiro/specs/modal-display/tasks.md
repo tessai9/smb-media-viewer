@@ -61,7 +61,7 @@
   - Wire `#overlay-next` click: when `currentIdx < imageCards.length - 1`, call `showFile(imageCards[currentIdx + 1])`; when at the last loaded card and `!exhausted`, disable the button, call `loadMore()`, and after the fetch completes re-query image cards and navigate to the newly added next card
   - _Requirements: 2.2, 2.3, 2.5, 2.6, 2.7_
 
-- [ ] 6. (P) Add keyboard navigation for the overlay
+- [x] 6. (P) Add keyboard navigation for the overlay
   - Add a `keydown` listener on `document` that acts only when the overlay is open (`overlayOpen === true`)
   - `ArrowRight` key: call `#overlay-next` click logic (navigate to next image)
   - `ArrowLeft` key: call `#overlay-prev` click logic (navigate to previous image)

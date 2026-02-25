@@ -180,6 +180,24 @@ describe "Static Assets" do
       content.should contain("oNext")
       (content.includes?("oPrev.addEventListener") || content.includes?("overlay-prev")).should be_true
     end
+
+    it "adds a keydown listener on document for keyboard navigation" do
+      content = File.read(js_path)
+      content.should contain("keydown")
+      content.should contain("document.addEventListener")
+    end
+
+    it "handles ArrowRight, ArrowLeft, and Escape keys" do
+      content = File.read(js_path)
+      content.should contain("ArrowRight")
+      content.should contain("ArrowLeft")
+      content.should contain("Escape")
+    end
+
+    it "calls preventDefault for keyboard events while overlay is open" do
+      content = File.read(js_path)
+      content.should contain("preventDefault")
+    end
   end
 
   describe "public/no-thumbnail.svg" do
