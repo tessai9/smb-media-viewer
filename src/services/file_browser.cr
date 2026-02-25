@@ -86,9 +86,8 @@ module FileBrowser
     abs_path = safe_path(media_root, rel_path)
     return nil if abs_path.nil?
 
-    clamped_limit = [limit, 100].min
-    entries       = scan_entries(media_root, abs_path, sort_key, sort_dir)
-    entries.skip(offset).first(clamped_limit)
+    entries = scan_entries(media_root, abs_path, sort_key, sort_dir)
+    entries.skip(offset).first(limit)
   end
 
   # Scans a directory, filters, sorts, and returns entries.

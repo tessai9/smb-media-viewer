@@ -58,21 +58,23 @@ describe FileBrowser do
       end
     end
 
-    it "clamps limit to 100 when limit > 100" do
+    # list_entries does NOT clamp — callers are responsible for enforcing
+    # their own upper bounds (e.g. the /api/files/* routes cap at 100).
+    it "returns all items when limit exceeds total count" do
       with_paged_dir(150) do |root|
         result = FileBrowser.list_entries(root, "", 0, 200).not_nil!
-        result.size.should eq(100)
+        result.size.should eq(150)
       end
     end
 
-    it "clamps limit=101 to 100" do
+    it "returns exactly limit items when limit < total count" do
       with_paged_dir(150) do |root|
         result = FileBrowser.list_entries(root, "", 0, 101).not_nil!
-        result.size.should eq(100)
+        result.size.should eq(101)
       end
     end
 
-    it "allows limit=100 without clamping" do
+    it "returns limit=100 items when 150 files exist" do
       with_paged_dir(150) do |root|
         result = FileBrowser.list_entries(root, "", 0, 100).not_nil!
         result.size.should eq(100)

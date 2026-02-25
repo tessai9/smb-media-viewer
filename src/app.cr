@@ -46,7 +46,7 @@ module AppRouter
     # GET /api/files/ → root directory as JSON (infinite scroll)
     get "/api/files/" do |env|
       offset   = env.params.query["offset"]?.try(&.to_i?) || 0
-      limit    = env.params.query["limit"]?.try(&.to_i?) || 50
+      limit    = [[env.params.query["limit"]?.try(&.to_i?) || 50, 1].max, 100].min
       sort_key = FileBrowser.parse_sort_key(env.params.query["sort"]? || "")
       sort_dir = FileBrowser.parse_sort_dir(env.params.query["order"]? || "")
       entries  = FileBrowser.list_entries(config.media_root, "", offset, limit, sort_key, sort_dir) || [] of FileEntry
@@ -62,7 +62,7 @@ module AppRouter
       halt env, status_code: 404, response: "Not Found" unless Dir.exists?(abs_path)
 
       offset   = env.params.query["offset"]?.try(&.to_i?) || 0
-      limit    = env.params.query["limit"]?.try(&.to_i?) || 50
+      limit    = [[env.params.query["limit"]?.try(&.to_i?) || 50, 1].max, 100].min
       sort_key = FileBrowser.parse_sort_key(env.params.query["sort"]? || "")
       sort_dir = FileBrowser.parse_sort_dir(env.params.query["order"]? || "")
       entries  = FileBrowser.list_entries(config.media_root, rel_path, offset, limit, sort_key, sort_dir) || [] of FileEntry
