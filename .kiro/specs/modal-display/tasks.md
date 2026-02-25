@@ -6,7 +6,7 @@
   - Verify the attribute renders correctly for image, video, pdf, and unknown entries using the existing test-media fixtures
   - _Requirements: 1.1, 1.3, 6.1_
 
-- [ ] 2. (P) Add overlay CSS to the stylesheet
+- [x] 2. (P) Add overlay CSS to the stylesheet
   - Add a full-screen fixed-position backdrop (`#overlay`) with a dark semi-transparent background and `z-index` above all grid content; hidden by default
   - Center the image element inside the overlay with `max-width: 100%` and `max-height: 90vh` to avoid overflow on small screens
   - Style a close button (`×`) positioned in the top-right corner of the overlay

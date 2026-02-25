@@ -39,6 +39,34 @@ describe "Static Assets" do
       content = File.read(css_path)
       content.should contain(".viewer")
     end
+
+    it "includes #overlay selector with fixed positioning" do
+      content = File.read(css_path)
+      content.should contain("#overlay")
+      (content.includes?("position:fixed") || content.includes?("position: fixed")).should be_true
+    end
+
+    it "includes body.overlay-open rule to lock background scroll" do
+      content = File.read(css_path)
+      content.should contain("body.overlay-open")
+      (content.includes?("overflow:hidden") || content.includes?("overflow: hidden")).should be_true
+    end
+
+    it "includes #overlay-close selector for the close button" do
+      content = File.read(css_path)
+      content.should contain("#overlay-close")
+    end
+
+    it "includes prev and next button selectors" do
+      content = File.read(css_path)
+      content.should contain("#overlay-prev")
+      content.should contain("#overlay-next")
+    end
+
+    it "includes #overlay-name selector for the filename label" do
+      content = File.read(css_path)
+      content.should contain("#overlay-name")
+    end
   end
 
   describe "public/app.js" do
