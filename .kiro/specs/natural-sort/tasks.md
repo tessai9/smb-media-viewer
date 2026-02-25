@@ -17,8 +17,8 @@
   - Leave the directory-before-file grouping and the offset/limit pagination slice unchanged
   - _Requirements: 1.2, 1.3, 3.2, 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 2. Cover natural sort behavior with tests
-- [ ] 2.1 Write tests for core numeric ordering and multi-segment filenames
+- [x] 2. Cover natural sort behavior with tests
+- [x] 2.1 Write tests for core numeric ordering and multi-segment filenames
   - Create a new test directory helper that contains files named to exercise numeric ordering, e.g. `image1.jpg`, `image2.jpg`, `image10.jpg`
   - Assert that ascending Name sort produces the order `image1.jpg → image2.jpg → image10.jpg` (not `image1.jpg → image10.jpg → image2.jpg`)
   - Assert that descending Name sort produces the reverse order `image10.jpg → image2.jpg → image1.jpg`
@@ -26,7 +26,7 @@
   - Confirm that purely alphabetical filenames (no digits) continue to sort in the same order as before — natural sort must not regress lexicographic behavior for non-numeric names
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2_
 
-- [ ] 2.2 Write tests for edge cases including leading zeros, special characters, and multibyte filenames
+- [x] 2.2 Write tests for edge cases including leading zeros, special characters, and multibyte filenames
   - Assert that filenames differing only in leading zeros sort numerically: `file01.jpg` and `file1.jpg` compare equal or consistently (both parse as integer `1`)
   - Assert that a filename starting with an underscore (e.g. `_note.jpg`) sorts before a filename starting with a lowercase letter (e.g. `anote.jpg`), matching ASCII code-point order for the underscore character (95 < 97)
   - Assert that filenames with a Japanese (multibyte) text prefix followed by a number sort by the numeric portion: `画像1.jpg → 画像2.jpg → 画像10.jpg`
