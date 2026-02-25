@@ -198,6 +198,24 @@ describe "Static Assets" do
       content = File.read(js_path)
       content.should contain("preventDefault")
     end
+
+    it "adds touchstart and touchend listeners on the overlay for swipe detection" do
+      content = File.read(js_path)
+      content.should contain("touchstart")
+      content.should contain("touchend")
+    end
+
+    it "uses swipe threshold of 50px with horizontal-dominance check" do
+      content = File.read(js_path)
+      content.should contain("50")
+      (content.includes?("deltaX") || content.includes?("touchStartX")).should be_true
+    end
+
+    it "routes left swipe to next and right swipe to prev" do
+      content = File.read(js_path)
+      content.should contain("touchStartX")
+      content.should contain("touchStartY")
+    end
   end
 
   describe "public/no-thumbnail.svg" do

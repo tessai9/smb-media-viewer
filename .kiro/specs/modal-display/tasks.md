@@ -70,7 +70,7 @@
   - Can be implemented concurrently with task 7; both tasks depend on tasks 4 and 5 being complete
   - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 7. (P) Add swipe gesture navigation for the overlay
+- [x] 7. (P) Add swipe gesture navigation for the overlay
   - Add `touchstart` listener on `#overlay` to record `touchStartX` and `touchStartY`
   - Add `touchend` listener on `#overlay`; compute `deltaX = touchEndX - touchStartX` and `deltaY = touchEndY - touchStartY`
   - Treat as a swipe only when `Math.abs(deltaX) >= 50` and `Math.abs(deltaX) > Math.abs(deltaY)` (horizontal dominates, no interference with vertical scroll)

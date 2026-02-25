@@ -153,6 +153,20 @@
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeOverlay(0); });
   window.addEventListener('popstate', function() { if (oOpen) closeOverlay(1); });
 
+  var touchStartX = 0, touchStartY = 0;
+  overlay.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].clientX;
+    touchStartY = e.changedTouches[0].clientY;
+  }, { passive: true });
+  overlay.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) oNext.click();
+      else oPrev.click();
+    }
+  }, { passive: true });
+
   document.addEventListener('keydown', function(e) {
     if (!oOpen) return;
     if (e.key === 'ArrowRight') { e.preventDefault(); oNext.click(); }
