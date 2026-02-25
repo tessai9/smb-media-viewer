@@ -90,6 +90,58 @@ module FileBrowser
     entries.skip(offset).first(limit)
   end
 
+  # Compares two pre-downcased filename strings using natural sort order.
+  # Numeric substrings are compared as unsigned integers; non-numeric substrings
+  # are compared as strings (case folding is applied by the caller before this call).
+  # Returns negative if a < b, 0 if equal, positive if a > b.
+  private def self.natural_compare(a : String, b : String) : Int32
+    a_chars = a.chars
+    b_chars = b.chars
+    ia = 0
+    ib = 0
+
+    loop do
+      # Extract non-digit (text) segment from each string.
+      a_ts = ia
+      while ia < a_chars.size && !a_chars[ia].ascii_number?
+        ia += 1
+      end
+      b_ts = ib
+      while ib < b_chars.size && !b_chars[ib].ascii_number?
+        ib += 1
+      end
+
+      cmp = a_chars[a_ts...ia].join <=> b_chars[b_ts...ib].join
+      return cmp unless cmp == 0
+
+      # Exhaustion check: if both ended at text boundary, strings are equal.
+      return  0 if ia >= a_chars.size && ib >= b_chars.size
+      return -1 if ia >= a_chars.size  # a ended; b continues with digits
+      return  1 if ib >= b_chars.size  # b ended; a continues with digits
+
+      # Extract digit segment from each string (both have a digit char here).
+      a_ds = ia
+      while ia < a_chars.size && a_chars[ia].ascii_number?
+        ia += 1
+      end
+      b_ds = ib
+      while ib < b_chars.size && b_chars[ib].ascii_number?
+        ib += 1
+      end
+
+      # Compare as unsigned 64-bit integers (leading zeros → same integer value).
+      num_a = a_chars[a_ds...ia].join.to_u64? || 0u64
+      num_b = b_chars[b_ds...ib].join.to_u64? || 0u64
+      cmp = num_a <=> num_b
+      return cmp unless cmp == 0
+
+      # Exhaustion check after digit segment.
+      return  0 if ia >= a_chars.size && ib >= b_chars.size
+      return -1 if ia >= a_chars.size
+      return  1 if ib >= b_chars.size
+    end
+  end
+
   # Scans a directory, filters, sorts, and returns entries.
   # Directories always appear before files; sort key and direction apply within each group.
   private def self.scan_entries(
@@ -136,7 +188,7 @@ module FileBrowser
 
     comparator = ->(a : FileEntry, b : FileEntry) do
       cmp = case sort_key
-            in SortKey::Name  then a.name.downcase <=> b.name.downcase
+            in SortKey::Name  then natural_compare(a.name.downcase, b.name.downcase)
             in SortKey::Mtime then a.mtime <=> b.mtime
             in SortKey::Ctime then a.ctime <=> b.ctime
             end

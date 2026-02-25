@@ -1,7 +1,7 @@
 # Implementation Plan
 
-- [ ] 1. Implement natural sort comparison in the file browser
-- [ ] 1.1 Build the segment-based filename comparison helper
+- [x] 1. Implement natural sort comparison in the file browser
+- [x] 1.1 Build the segment-based filename comparison helper
   - Add a private helper to the file browser module that accepts two pre-downcased filename strings and returns a negative, zero, or positive integer indicating their natural sort order
   - Split each string into alternating non-digit and digit segments by scanning character by character; only ASCII digit characters ('0'–'9') are classified as digits — all other characters including multibyte codepoints belong to text segments
   - Compare text segments using standard string ordering (case-insensitive treatment is already applied by the caller via pre-downcase)
@@ -10,7 +10,7 @@
   - Return `0` for two strings that are identical under this comparison (supports stable sort)
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 3.1, 3.3, 3.4_
 
-- [ ] 1.2 Apply the new comparison helper to the Name sort path
+- [x] 1.2 Apply the new comparison helper to the Name sort path
   - In the file browser's internal sort method, replace the single expression that compares names lexicographically with a call to the new helper, passing both names pre-downcased (consistent with the existing pattern)
   - Leave the Mtime and Ctime sort branches completely unchanged
   - Leave the descending-order negation logic unchanged — it wraps the comparison result and already works correctly with any comparator
