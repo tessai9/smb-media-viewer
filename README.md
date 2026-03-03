@@ -25,7 +25,27 @@ poppler-utils   # PDF サムネイル生成
 cifs-utils      # Samba マウント
 ```
 
-- Samba 共有が `mount -t cifs` でローカルパスにマウント済みであること
+- Samba 共有が `mount -t cifs` でローカルパスにマウント済みであること（詳細は [Samba 共有のマウント](#samba-共有のマウント) を参照）
+
+## Samba 共有のマウント
+
+本アプリケーションは、ローカルパスにマウントされたディレクトリをスキャンします。Samba 共有をマウントするには、`cifs-utils` を使用します。
+
+### 一時的なマウント
+
+```bash
+sudo mount -t cifs -o username=<ユーザー名>,password=<パスワード>,ro,iocharset=utf8 //192.168.x.x/share /mnt/nas/media
+```
+
+### 恒久的なマウント (/etc/fstab)
+
+`/etc/fstab` に以下の行を追加することで、起動時に自動的にマウントされます。パスワードを直接記述したくない場合は `credentials` オプションの使用を検討してください。
+
+```
+//192.168.x.x/share /mnt/nas/media cifs username=<ユーザー名>,password=<パスワード>,ro,iocharset=utf8,x-systemd.automount 0 0
+```
+
+> **セキュリティ上の注意:** 読み取り専用 (`ro`) オプションでのマウントを強く推奨します。
 
 ## インストール
 
