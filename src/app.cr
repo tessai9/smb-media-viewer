@@ -71,6 +71,18 @@ module AppRouter
       entries.to_json
     end
 
+    # GET /api/metadata/*path → AI generation metadata for a PNG file (JSON)
+    get "/api/metadata/*path" do |env|
+      rel_path = URI.decode(env.params.url["path"])
+      abs_path = FileBrowser.safe_path(config.media_root, rel_path)
+      halt env, status_code: 400, response: "Bad Request" if abs_path.nil?
+      halt env, status_code: 404, response: "Not Found" unless File.exists?(abs_path)
+      meta = ImageMetadataService.extract(abs_path)
+      halt env, status_code: 404, response: "No metadata" if meta.nil?
+      env.response.content_type = "application/json"
+      meta.to_json
+    end
+
     # GET /view/*path → viewer page (SSR HTML) with prev/next navigation
     get "/view/*path" do |env|
       rel_path = URI.decode(env.params.url["path"])

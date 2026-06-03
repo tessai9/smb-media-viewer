@@ -81,7 +81,9 @@
   overlay.innerHTML = '<img id="overlay-img" src="" alt=""><p id="overlay-name"></p>'
     + '<button id="overlay-close">\u00d7</button>'
     + '<button id="overlay-prev">\u2039</button>'
-    + '<button id="overlay-next">\u203a</button>';
+    + '<button id="overlay-next">\u203a</button>'
+    + '<button id="overlay-meta-btn" hidden>AI\u60c5\u5831</button>'
+    + '<div id="overlay-meta-panel" hidden></div>';
   document.body.appendChild(overlay);
 
   var b = document.body;
@@ -90,7 +92,32 @@
   var oClose = document.getElementById('overlay-close');
   var oPrev = document.getElementById('overlay-prev');
   var oNext = document.getElementById('overlay-next');
+  var oMetaBtn = document.getElementById('overlay-meta-btn');
+  var oMetaPanel = document.getElementById('overlay-meta-panel');
   var oOpen = false, oCur = null, oSY = 0;
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function loadMeta(c) {
+    oMetaBtn.hidden = true;
+    oMetaPanel.hidden = true;
+    oMetaPanel.innerHTML = '';
+    fetch(c.href.replace('/view/', '/api/metadata/'))
+      .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function(m) {
+        var h = '';
+        if (m.prompt) h += '<div class="ometa-section"><b>プロンプト</b><p class="meta-text">' + esc(m.prompt) + '</p></div>';
+        if (m.negative_prompt) h += '<div class="ometa-section"><b>ネガティブ</b><p class="meta-text">' + esc(m.negative_prompt) + '</p></div>';
+        if (m.settings && Object.keys(m.settings).length) {
+          var dl = Object.entries(m.settings).map(function(e) { return '<dt>' + esc(e[0]) + '</dt><dd>' + esc(e[1]) + '</dd>'; }).join('');
+          h += '<div class="ometa-section"><b>生成設定</b><dl class="meta-settings">' + dl + '</dl></div>';
+        }
+        if (h) { oMetaPanel.innerHTML = h; oMetaBtn.hidden = false; }
+      })
+      .catch(function() {});
+  }
 
   function getImageCards() {
     return Array.from(grid.querySelectorAll('.card[data-media-type="image"]'));
@@ -102,6 +129,8 @@
     oName.textContent = c.lastElementChild.textContent;
     history.replaceState(0, 0, c.href);
     updateNavButtons();
+    oMetaPanel.hidden = true;
+    loadMeta(c);
   }
 
   function openOverlay(c) {
@@ -113,11 +142,15 @@
     overlay.hidden = false;
     history.pushState(0, 0, c.href);
     updateNavButtons();
+    oMetaPanel.hidden = true;
+    loadMeta(c);
   }
 
   function closeOverlay(fp) {
     oOpen = false; overlay.hidden = true; oImg.src = '';
     b.classList.remove('overlay-open');
+    oMetaBtn.hidden = true;
+    oMetaPanel.hidden = true;
     window.scrollTo(0, oSY);
     if (!fp) history.back();
   }
@@ -149,6 +182,7 @@
     }
   });
 
+  oMetaBtn.addEventListener('click', function() { oMetaPanel.hidden = !oMetaPanel.hidden; });
   oClose.addEventListener('click', function() { closeOverlay(0); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeOverlay(0); });
   window.addEventListener('popstate', function() { if (oOpen) closeOverlay(1); });
