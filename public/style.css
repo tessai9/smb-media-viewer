@@ -36,6 +36,17 @@ body.overlay-open{overflow:hidden}
 #overlay-prev{left:.5rem}
 #overlay-next{right:.5rem}
 #overlay-prev:disabled,#overlay-next:disabled{opacity:.25;cursor:default}
+.viewer-metadata{background:#1a1a1a;border:1px solid #333;border-radius:6px;margin-top:.75rem;overflow:hidden}
+.meta-summary{padding:.5rem .75rem;cursor:pointer;color:#9cf;font-size:.9rem;list-style:none}
+.meta-summary::-webkit-details-marker{display:none}
+.meta-summary::before{content:"▶ "}
+details[open] .meta-summary::before{content:"▼ "}
+.meta-section{padding:.5rem .75rem;border-top:1px solid #333}
+.meta-label{font-size:.75rem;color:#777;text-transform:uppercase;margin-bottom:.25rem;font-weight:normal}
+.meta-text{font-size:.85rem;color:#ccc;white-space:pre-wrap;word-break:break-word}
+.meta-settings{display:grid;grid-template-columns:max-content 1fr;gap:.15rem .75rem;font-size:.8rem}
+.meta-settings dt{color:#aaa}
+.meta-settings dd{color:#ddd}
 @media(max-width:480px){
   .grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.5rem}
   .viewer-nav{font-size:.85rem}

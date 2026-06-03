@@ -3,6 +3,7 @@ require "./config"
 require "./services/mime"
 require "./services/file_browser"
 require "./services/thumbnail"
+require "./services/image_metadata"
 require "json"
 require "ecr"
 require "uri"
@@ -88,6 +89,7 @@ module AppRouter
       entry      = file_entries[current_idx]
       prev_entry = current_idx > 0 ? file_entries[current_idx - 1].as(FileEntry?) : nil.as(FileEntry?)
       next_entry = current_idx < file_entries.size - 1 ? file_entries[current_idx + 1].as(FileEntry?) : nil.as(FileEntry?)
+      ai_meta    = entry.media_type == "image" ? ImageMetadataService.extract(abs_path) : nil
 
       title   = entry.name
       content = ECR.render("src/views/viewer.ecr")

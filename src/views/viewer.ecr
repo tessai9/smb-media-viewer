@@ -31,4 +31,32 @@
   <div class="viewer-info">
     <p class="filename"><%= entry.name %></p>
   </div>
+
+  <% if meta = ai_meta %>
+  <details class="viewer-metadata">
+    <summary class="meta-summary">AI生成情報</summary>
+    <% if p = meta.prompt %>
+    <div class="meta-section">
+      <h3 class="meta-label">プロンプト</h3>
+      <p class="meta-text"><%= p %></p>
+    </div>
+    <% end %>
+    <% if np = meta.negative_prompt %>
+    <div class="meta-section">
+      <h3 class="meta-label">ネガティブプロンプト</h3>
+      <p class="meta-text"><%= np %></p>
+    </div>
+    <% end %>
+    <% unless meta.settings.empty? %>
+    <div class="meta-section">
+      <h3 class="meta-label">生成設定</h3>
+      <dl class="meta-settings">
+        <% meta.settings.each do |key, value| %>
+        <dt><%= key %></dt><dd><%= value %></dd>
+        <% end %>
+      </dl>
+    </div>
+    <% end %>
+  </details>
+  <% end %>
 </div>
