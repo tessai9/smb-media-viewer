@@ -1,5 +1,5 @@
 # ── Stage 1: Build ───────────────────────────────────────────────────────────
-FROM crystallang/crystal:1.15.1 AS builder
+FROM crystallang/crystal:1.18.2 AS builder
 
 WORKDIR /app
 
