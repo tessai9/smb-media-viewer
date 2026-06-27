@@ -3,4 +3,6 @@
 /bin/
 /.shards/
 *.dwarf
+mnt/
+test-media/*
 config.yml
