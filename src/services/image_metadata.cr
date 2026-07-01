@@ -79,12 +79,9 @@ module ImageMetadataService
       )
     end
 
-    # ComfyUI: iTXt "prompt" containing JSON workflow
+    # ComfyUI: tEXt/iTXt "prompt" containing JSON node graph
     if (wf = texts["prompt"]?) && wf.starts_with?("{")
-      return AiImageMetadata.new(
-        source: "comfyui",
-        raw_text: wf
-      )
+      return parse_comfyui_prompt(wf)
     end
 
     nil
@@ -146,6 +143,102 @@ module ImageMetadataService
       parts = pair.split(": ", 2)
       settings[parts[0].strip] = parts[1].strip if parts.size == 2
     end
+  end
+
+  # Parse ComfyUI prompt JSON (node graph) into structured metadata.
+  # Locates the KSampler node, follows its positive/negative/model edges,
+  # and collects LoRA loaders from the full graph.
+  private def self.parse_comfyui_prompt(json_str : String) : AiImageMetadata
+    nodes = JSON.parse(json_str).as_h
+    settings = Hash(String, String).new
+
+    ksampler = comfyui_find_ksampler(nodes)
+
+    positive_text = nil
+    negative_text = nil
+
+    if ks = ksampler
+      inputs = ks["inputs"]?
+
+      {"Seed" => "seed", "Steps" => "steps", "CFG" => "cfg",
+       "Sampler" => "sampler_name", "Scheduler" => "scheduler"}.each do |label, key|
+        if v = inputs.try(&.[key]?)
+          settings[label] = v.to_s unless v.raw.is_a?(Array)
+        end
+      end
+
+      if ref = inputs.try(&.["positive"]?.try(&.as_a?))
+        positive_text = comfyui_resolve_clip_text(nodes, ref[0].as_s)
+      end
+      if ref = inputs.try(&.["negative"]?.try(&.as_a?))
+        negative_text = comfyui_resolve_clip_text(nodes, ref[0].as_s)
+      end
+      if ref = inputs.try(&.["model"]?.try(&.as_a?))
+        if ckpt = comfyui_resolve_checkpoint(nodes, ref[0].as_s)
+          settings["Model"] = ckpt
+        end
+      end
+    end
+
+    loras = comfyui_collect_loras(nodes)
+    settings["LoRA"] = loras.join(", ") unless loras.empty?
+
+    AiImageMetadata.new(
+      prompt: presence(positive_text.to_s),
+      negative_prompt: presence(negative_text.to_s),
+      settings: settings,
+      source: "comfyui",
+      raw_text: json_str
+    )
+  rescue
+    AiImageMetadata.new(source: "comfyui", raw_text: json_str)
+  end
+
+  private def self.comfyui_find_ksampler(nodes : Hash(String, JSON::Any)) : JSON::Any?
+    nodes.each_value do |node|
+      ct = node["class_type"]?.try(&.as_s?)
+      return node if ct == "KSampler" || ct == "KSamplerAdvanced"
+    end
+    nil
+  end
+
+  # Follow a node reference and return the text from a CLIPTextEncode node.
+  # Returns nil if the referenced node is not a CLIPTextEncode.
+  private def self.comfyui_resolve_clip_text(nodes : Hash(String, JSON::Any), node_id : String) : String?
+    node = nodes[node_id]?
+    return nil unless node
+    return nil unless node["class_type"]?.try(&.as_s?) == "CLIPTextEncode"
+    node["inputs"]?.try(&.["text"]?.try(&.as_s?))
+  end
+
+  # Walk the model input chain (LoraLoader → LoraLoader → ... → CheckpointLoaderSimple)
+  # and return the checkpoint name.
+  private def self.comfyui_resolve_checkpoint(nodes : Hash(String, JSON::Any), node_id : String, depth = 0) : String?
+    return nil if depth > 20
+    node = nodes[node_id]?
+    return nil unless node
+    case node["class_type"]?.try(&.as_s?)
+    when "CheckpointLoaderSimple"
+      node["inputs"]?.try(&.["ckpt_name"]?.try(&.as_s?))
+    when .try(&.starts_with?("LoraLoader"))
+      if ref = node["inputs"]?.try(&.["model"]?.try(&.as_a?))
+        comfyui_resolve_checkpoint(nodes, ref[0].as_s, depth + 1)
+      end
+    end
+  end
+
+  # Collect all LoRA names+strengths from the graph.
+  private def self.comfyui_collect_loras(nodes : Hash(String, JSON::Any)) : Array(String)
+    loras = [] of String
+    nodes.each_value do |node|
+      next unless node["class_type"]?.try(&.as_s?).try(&.starts_with?("LoraLoader"))
+      inputs = node["inputs"]?
+      name = inputs.try(&.["lora_name"]?.try(&.as_s?))
+      next unless name
+      strength = inputs.try(&.["strength_model"]?.try(&.as_f?))
+      loras << (strength ? "#{name}(#{strength})" : name)
+    end
+    loras
   end
 
   private def self.presence(s : String) : String?
