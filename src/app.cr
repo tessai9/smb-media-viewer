@@ -4,6 +4,7 @@ require "./services/mime"
 require "./services/file_browser"
 require "./services/thumbnail"
 require "./services/image_metadata"
+require "./api"
 require "json"
 require "ecr"
 require "uri"
@@ -142,6 +143,9 @@ module AppRouter
         env.redirect "/no-thumbnail.svg"
       end
     end
+
+    # REST API v1 + MCP endpoint (machine clients, e.g. openclaw)
+    ApiRoutes.setup(config)
   end
 end
 

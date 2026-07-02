@@ -90,6 +90,24 @@ module FileBrowser
     entries.skip(offset).first(limit)
   end
 
+  # Like list_entries, but also returns the total entry count before pagination
+  # so API clients can page through the full listing.
+  # Returns nil if rel_path violates the media_root boundary.
+  def self.list_entries_with_total(
+    media_root : String,
+    rel_path   : String,
+    offset     : Int32,
+    limit      : Int32,
+    sort_key   : SortKey = SortKey::Name,
+    sort_dir   : SortDir = SortDir::Asc
+  ) : {Array(FileEntry), Int32}?
+    abs_path = safe_path(media_root, rel_path)
+    return nil if abs_path.nil?
+
+    entries = scan_entries(media_root, abs_path, sort_key, sort_dir)
+    {entries.skip(offset).first(limit), entries.size}
+  end
+
   # Compares two pre-downcased filename strings using natural sort order.
   # Numeric substrings are compared as unsigned integers; non-numeric substrings
   # are compared as strings (case folding is applied by the caller before this call).

@@ -12,6 +12,8 @@
 - **ファイルビューア** — 画像・動画・PDF をブラウザネイティブで表示、前/次ナビゲーション付き
 - **サムネイル自動生成** — vipsthumbnail / ffmpeg / pdftoppm でサムネイルを生成してディスクキャッシュ
 - **Range request 対応** — 動画のシークバーが正常動作
+- **REST API v1** — 同一ネットワーク内の別サーバー（openclaw など）からファイル一覧・実体・詳細情報を取得可能
+- **MCP サーバー** — AI エージェントがツール経由でメディアを探索できる `/mcp` エンドポイント
 
 ## 動作要件
 
@@ -129,6 +131,10 @@ http://server:3000/browse/?sort=name&order=desc
 | GET | `/view/*path` | ファイルビューアページ（HTML） |
 | GET | `/raw/*path` | ファイル本体の配信（Range request 対応） |
 | GET | `/thumbnail/*path` | サムネイル画像（JPEG） |
+| GET | `/api/v1/list/*path` | ディレクトリ・ファイル一覧（JSON、REST API v1） |
+| GET | `/api/v1/info/*path` | ファイル/ディレクトリ詳細情報（JSON、REST API v1） |
+| GET | `/api/v1/content/*path` | ファイル実体の配信（REST API v1、Range request 対応） |
+| POST | `/mcp` | MCP サーバー（JSON-RPC 2.0） |
 
 **クエリパラメータ（browse / api/files 共通）:**
 
@@ -138,6 +144,94 @@ http://server:3000/browse/?sort=name&order=desc
 | `order` | `asc` / `desc` | `asc` | ソート方向 |
 | `offset` | 整数 | `0` | ページングオフセット（api/files のみ） |
 | `limit` | 整数（最大 100） | `50` | 取得件数（api/files のみ） |
+
+## REST API v1
+
+同一ネットワーク内の別サーバー（openclaw など）からの API 通信用エンドポイントです。すべて JSON で応答し、エラーは `{"error": "<message>"}`（400 / 404 / 405）で返します。パスは `media_root` からの相対パスで指定します。
+
+### 一覧取得 — `GET /api/v1/list/<path>`
+
+指定パス配下のディレクトリ・ファイル一覧を返します。ディレクトリが先、その後ファイルの順で、隠しファイルと非対応ファイルは含まれません。
+
+```bash
+curl "http://server:3000/api/v1/list/photos?offset=0&limit=50&sort=mtime&order=desc"
+```
+
+```json
+{
+  "path": "photos",
+  "offset": 0,
+  "limit": 50,
+  "total": 123,
+  "entries": [
+    {"name": "trip", "path": "photos/trip", "is_dir": true, "size": 0, "mtime": "...", "media_type": "unknown"},
+    {"name": "a.jpg", "path": "photos/a.jpg", "is_dir": false, "size": 12345, "mtime": "...", "media_type": "image"}
+  ]
+}
+```
+
+クエリパラメータ: `offset`（デフォルト 0）/ `limit`（デフォルト 50、最大 100）/ `sort`（`name` / `ctime` / `mtime`）/ `order`（`asc` / `desc`）
+
+### 詳細情報取得 — `GET /api/v1/info/<path>`
+
+ファイルまたはディレクトリの詳細情報を返します。PNG 画像に AI 生成メタデータ（Stable Diffusion / NovelAI / ComfyUI）が埋め込まれている場合は `ai_metadata` として展開されます。
+
+```bash
+curl "http://server:3000/api/v1/info/photos/a.png"
+```
+
+```json
+{
+  "name": "a.png",
+  "path": "photos/a.png",
+  "is_dir": false,
+  "size": 123456,
+  "mtime": "2026-01-01T00:00:00Z",
+  "mtime_unix": 1767225600,
+  "media_type": "image",
+  "content_type": "image/png",
+  "extension": "png",
+  "ai_metadata": {"prompt": "...", "settings": {"Steps": "20"}, "source": "stable-diffusion"}
+}
+```
+
+ディレクトリの場合は `media_type: "directory"` となり、`content_type` / `extension` / `ai_metadata` は含まれません。
+
+### ファイル実体取得 — `GET /api/v1/content/<path>`
+
+ファイル本体を適切な Content-Type 付きで返します。Range request に対応しているため、大きな動画の部分取得も可能です。
+
+```bash
+curl -O "http://server:3000/api/v1/content/videos/clip.mp4"
+curl -H "Range: bytes=0-1023" "http://server:3000/api/v1/content/videos/clip.mp4"
+```
+
+## MCP サーバー
+
+AI エージェントが API の使い方を自律的に理解してメディアを探索できるよう、`POST /mcp` に MCP（Model Context Protocol）サーバーを実装しています。Streamable HTTP トランスポートのステートレス形態（素の JSON 応答、SSE・セッション管理なし）です。
+
+MCP クライアント（Claude Code など）への登録例:
+
+```json
+{
+  "mcpServers": {
+    "smb-media-viewer": {
+      "type": "http",
+      "url": "http://server:3000/mcp"
+    }
+  }
+}
+```
+
+### 提供ツール
+
+| ツール | 引数 | 説明 |
+|--------|------|------|
+| `list_files` | `path`, `offset`, `limit`, `sort`, `order` | ディレクトリ・ファイル一覧（REST の `/api/v1/list/` 相当） |
+| `get_file_info` | `path` | ファイル詳細情報。PNG の AI 生成メタデータを含む（`/api/v1/info/` 相当） |
+| `read_file` | `path` | ファイル実体。画像は MCP image コンテンツ、その他は base64 リソースとして返す |
+
+`read_file` は 10 MiB を超えるファイルを拒否し、代わりに `/api/v1/content/` の URL を案内します（大容量ファイルは HTTP で直接取得してください）。
 
 ## 対応メディア
 

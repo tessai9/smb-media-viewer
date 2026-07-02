@@ -65,7 +65,20 @@ GET /api/files/*path         → ファイル一覧JSON（無限スクロール�
 GET /view/*path              → 個別ファイルのビューアページ（SSR HTML）
 GET /raw/*path               → ファイル本体の配信（適切なContent-Type付き）
 GET /thumbnail/*path         → サムネイル画像の配信（キャッシュ付き）
+
+# REST API v1（同一ネットワーク内の機械クライアント向け。例: openclaw）
+GET /api/v1/list/*path       → 指定パス配下のディレクトリ・ファイル一覧（JSON）
+                               クエリパラメータ: offset / limit (max: 100) / sort / order
+                               レスポンス: {path, offset, limit, total, entries: [FileEntry]}
+GET /api/v1/info/*path       → ファイル/ディレクトリ詳細情報（JSON）
+                               name, path, is_dir, size, mtime, mtime_unix, media_type,
+                               content_type, extension, ai_metadata（PNGのAI生成メタデータ）
+GET /api/v1/content/*path    → ファイル実体の配信（Content-Type付き、Range request対応）
+POST /mcp                    → MCPサーバー（JSON-RPC 2.0、ステートレスStreamable HTTP）
 ```
+
+- REST APIのエラーは `{"error": "<message>"}` のJSONで返す（400 / 404 / 405）
+- `/api/files/*` は既存Web UI（無限スクロール）用。機械クライアントは `/api/v1/*` を使う
 
 ## ディレクトリ構成
 
@@ -76,10 +89,14 @@ media-viewer/
 ├── media-viewer.service       # systemd用
 ├── src/
 │   ├── app.cr                 # エントリポイント、Kemalルーティング定義
+│   ├── api.cr                 # REST API v1 + /mcp のルーティング定義
 │   ├── config.cr              # 設定の読み込み（YAML）
 │   ├── services/
 │   │   ├── mime.cr            # 拡張子→Content-Type / MediaType判定
 │   │   ├── file_browser.cr    # ディレクトリ走査、パス安全性検証、ページング
+│   │   ├── file_details.cr    # ファイル詳細情報の構築（/api/v1/info、MCP用）
+│   │   ├── image_metadata.cr  # PNGのAI生成メタデータ抽出（SD/NovelAI/ComfyUI）
+│   │   ├── mcp_server.cr      # MCPサーバー（JSON-RPC 2.0処理、ツール実装）
 │   │   └── thumbnail.cr       # サムネイル生成・ディスクキャッシュ管理
 │   └── views/
 │       ├── layout.ecr         # 共通HTMLレイアウト
@@ -147,6 +164,25 @@ media_type : String          # "image", "video", "pdf", "unknown"
 1. **画像**: `vipsthumbnail <source> --size <SIZE>x<SIZE> -o <dest>[Q=80]`
 2. **動画**: `ffmpeg` で1秒地点のフレームを一時ファイルに抽出 → `vipsthumbnail` でリサイズ → 一時ファイル削除
 3. **PDF**: `pdftoppm` で1ページ目をJPEG化 → `vipsthumbnail` でリサイズ → 一時ファイル削除
+
+### services/file_details.cr
+
+- `safe_path` 検証済みの絶対パスから `FileDetails` を構築する
+- ファイル: name / path / is_dir / size / mtime / mtime_unix / media_type / content_type / extension を返す。PNG画像の場合は `ai_metadata`（`ImageMetadataService` による抽出結果）も含む
+- ディレクトリ: media_type は `"directory"`、content_type / extension は省略（JSONにnilフィールドは出力されない）
+
+### services/mcp_server.cr
+
+- MCP（Model Context Protocol）サーバー。Streamable HTTPトランスポートのステートレス形態で実装する
+  - `POST /mcp` へのJSON-RPC 2.0メッセージ1件を受け、素のJSONで応答する（SSEストリーム・セッション管理なし）
+  - GET / DELETE は405を返す
+- 対応メソッド: `initialize` / `ping` / `tools/list` / `tools/call`。通知（idなし）は202で受理
+- 提供ツール（REST API v1と同等の機能。ツール定義のdescriptionにREST対応エンドポイントを明記し、AIがAPIの使い方を理解できるようにする）
+  - `list_files(path, offset, limit, sort, order)` → ディレクトリ一覧
+  - `get_file_info(path)` → ファイル詳細情報
+  - `read_file(path)` → ファイル実体。画像はMCP imageコンテンツ、その他はbase64埋め込みリソース。10MiB超は拒否し `/api/v1/content/` へ誘導
+- ツール実行エラーは `isError: true` の結果として返す（JSON-RPCプロトコルエラーとは区別する）
+- パス検証はすべて `FileBrowser.safe_path` を経由する
 
 ## フロントエンド設計
 
