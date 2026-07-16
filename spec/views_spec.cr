@@ -3,6 +3,7 @@ require "ecr"
 require "uri"
 require "../src/services/file_browser"
 require "../src/services/mime"
+require "../src/services/image_metadata"
 
 describe "layout.ecr" do
   it "renders complete HTML shell" do
@@ -129,6 +130,7 @@ describe "viewer.ecr" do
     entry      = FileEntry.new("photo.jpg", "photos/photo.jpg", false, 1024i64, Time.utc, "image")
     prev_entry = nil.as(FileEntry?)
     next_entry = nil.as(FileEntry?)
+    ai_meta = nil.as(ImageMetadataService::AiImageMetadata?)
     result = ECR.render("src/views/viewer.ecr")
     result.should contain("<img")
     result.should contain("/raw/photos/photo.jpg")
@@ -138,6 +140,7 @@ describe "viewer.ecr" do
     entry      = FileEntry.new("clip.mp4", "videos/clip.mp4", false, 1024i64, Time.utc, "video")
     prev_entry = nil.as(FileEntry?)
     next_entry = nil.as(FileEntry?)
+    ai_meta = nil.as(ImageMetadataService::AiImageMetadata?)
     result = ECR.render("src/views/viewer.ecr")
     result.should contain("<video")
     result.should contain("controls")
@@ -148,6 +151,7 @@ describe "viewer.ecr" do
     entry      = FileEntry.new("doc.pdf", "docs/doc.pdf", false, 1024i64, Time.utc, "pdf")
     prev_entry = nil.as(FileEntry?)
     next_entry = nil.as(FileEntry?)
+    ai_meta = nil.as(ImageMetadataService::AiImageMetadata?)
     result = ECR.render("src/views/viewer.ecr")
     result.should contain("<object")
     result.should contain("/raw/docs/doc.pdf")
@@ -158,6 +162,7 @@ describe "viewer.ecr" do
     entry      = FileEntry.new("b.jpg", "b.jpg", false, 1024i64, Time.utc, "image")
     prev_entry = FileEntry.new("a.jpg", "a.jpg", false, 1024i64, Time.utc, "image").as(FileEntry?)
     next_entry = FileEntry.new("c.jpg", "c.jpg", false, 1024i64, Time.utc, "image").as(FileEntry?)
+    ai_meta = nil.as(ImageMetadataService::AiImageMetadata?)
     result = ECR.render("src/views/viewer.ecr")
     result.should contain("/view/a.jpg")
     result.should contain("/view/c.jpg")
@@ -167,6 +172,7 @@ describe "viewer.ecr" do
     entry      = FileEntry.new("photo.jpg", "photo.jpg", false, 1024i64, Time.utc, "image")
     prev_entry = nil.as(FileEntry?)
     next_entry = nil.as(FileEntry?)
+    ai_meta = nil.as(ImageMetadataService::AiImageMetadata?)
     result = ECR.render("src/views/viewer.ecr")
     result.should_not contain("/view/")
   end
@@ -175,6 +181,7 @@ describe "viewer.ecr" do
     entry      = FileEntry.new("photo.jpg", "photos/photo.jpg", false, 1024i64, Time.utc, "image")
     prev_entry = nil.as(FileEntry?)
     next_entry = nil.as(FileEntry?)
+    ai_meta = nil.as(ImageMetadataService::AiImageMetadata?)
     result = ECR.render("src/views/viewer.ecr")
     result.should contain("href=\"/browse/photos\"")
   end
@@ -183,6 +190,7 @@ describe "viewer.ecr" do
     entry      = FileEntry.new("photo.jpg", "photo.jpg", false, 1024i64, Time.utc, "image")
     prev_entry = nil.as(FileEntry?)
     next_entry = nil.as(FileEntry?)
+    ai_meta = nil.as(ImageMetadataService::AiImageMetadata?)
     result = ECR.render("src/views/viewer.ecr")
     result.should contain("href=\"/browse/\"")
   end
